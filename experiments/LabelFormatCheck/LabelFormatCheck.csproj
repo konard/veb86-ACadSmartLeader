@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Experiment for the ТЗ (docs/TZ-smart-leader.md): checks that the label formats of the smart leader
+    evaluate with the real Core of acadPaletteSetXDATA, without AutoCAD.
+    Usage: dotnet run -p:XDataRepo=/path/to/acadPaletteSetXDATA
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="$(XDataRepo)/src/AcadPaletteSetXData.Core/AcadPaletteSetXData.Core.csproj" />
+  </ItemGroup>
+</Project>
