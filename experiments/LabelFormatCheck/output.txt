@@ -1,0 +1,24 @@
+MOTOR on MOTOR: [@@[Device_Number]] / [@@[Power] кВт]
+  top    = М1
+  bottom = 7,50 кВт
+MOTOR_FULL on MOTOR: [@@[GC_Name]] / [=@@[Power] & ' кВт, ' & @@[Current] & ' А']
+  top    = ЩУ1.3
+  bottom = 7,50 кВт, 15,2 А
+CABLE on CABLE: [@@[GC_Name]] / [@@[Cable_Mark] @@[Cable_Cores]x@@[Cable_Section]]
+  top    = ЩУ1.3
+  bottom = ВВГнг-LS 5x2,5
+CABLE_GROUP on CABLE: [@@[GC_Name]] / []
+  top    = ЩУ1.3
+  bottom = 
+ANY on MOTOR: [@@[Device_Type]] / [@@[NMO_Name]]
+  top    = Электродвигатель
+  bottom = Насос подпитки
+ANY on CABLE: [@@[Device_Type]] / [@@[NMO_Name]]
+  top    = 
+  bottom = 
+BROKEN on CABLE: [@@[Unknown_Id]] / [@@[Cable_Mark]
+  top    = @@[Unknown_Id]
+  bottom = @@[Cable_Mark
+  error  __LEADER_TOP_6: неизвестная ссылка @@[Unknown_Id]
+  error  __LEADER_BOTTOM_6: незакрытая ссылка @@[ в позиции 0
+after change: 11,00 кВт

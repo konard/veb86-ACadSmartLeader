@@ -1,0 +1,46 @@
+{
+  "format": "ACadSmartLeader.labels",
+  "version": 1,
+  "rules": [
+    {
+      "id": "MOTOR",
+      "caption": "Двигатель: номер / мощность",
+      "templates": [ "MOTOR" ],
+      "entityTypes": [ "BlockReference" ],
+      "top": "@@[Device_Number]",
+      "bottom": "@@[Power] кВт",
+      "empty": "—",
+      "style": "Смарт-выноска",
+      "layer": "Выноски"
+    },
+    {
+      "id": "MOTOR_FULL",
+      "caption": "Двигатель: обозначение / мощность и ток",
+      "templates": [ "MOTOR" ],
+      "top": "@@[GC_Name]",
+      "bottom": "=@@[Power] & ' кВт, ' & @@[Current] & ' А'"
+    },
+    {
+      "id": "CABLE",
+      "caption": "Кабель: группа / марка",
+      "templates": [ "CABLE" ],
+      "entityTypes": [ "Line", "Polyline" ],
+      "top": "@@[GC_Name]",
+      "bottom": "@@[Cable_Mark] @@[Cable_Cores]x@@[Cable_Section]",
+      "empty": "—",
+      "layer": "Выноски"
+    },
+    {
+      "id": "CABLE_GROUP",
+      "caption": "Кабель: только группа",
+      "templates": [ "CABLE" ],
+      "top": "@@[GC_Name]"
+    },
+    {
+      "id": "ANY",
+      "caption": "Любой объект с данными: тип / наименование",
+      "top": "@@[Device_Type]",
+      "bottom": "@@[NMO_Name]"
+    }
+  ]
+}
