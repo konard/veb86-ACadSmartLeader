@@ -44,6 +44,15 @@ public class LeaderWindow : Window
     }
     protected StackPanel Row(Panel? parent = null)
     { var row = new StackPanel { Orientation = Orientation.Horizontal }; (parent ?? Body).Children.Add(row); return row; }
+    protected void ParameterPicker(SchemaSnapshot schema, Func<TextBox> destination, Action? inserting = null)
+    {
+        var parameters = new ComboBox { Width = 370, ItemsSource = schema.Parameters.Values.ToArray(), DisplayMemberPath = "Caption", SelectedIndex = 0, Margin = new Thickness(0, 8, 8, 0) };
+        var row = Row(); row.Children.Add(parameters);
+        Button(row, "Вставить параметр", () => {
+            if (!(parameters.SelectedItem is SchemaParameter parameter)) return;
+            inserting?.Invoke(); var text = destination(); text.SelectedText = "@@[" + parameter.Id + "]"; text.Focus();
+        });
+    }
     protected void Failure(Exception e) => MessageBox.Show(this, e.Message, "ACadSmartLeader", MessageBoxButton.OK, MessageBoxImage.Warning);
 }
 
@@ -77,9 +86,7 @@ public sealed class RulesWindow : LeaderWindow
             if (caption == "Название") text.LostKeyboardFocus += (_, _) => list.Items.Refresh();
             if (caption == "Верхняя полка" || caption == "Нижняя полка") text.GotKeyboardFocus += (_, _) => activeFormat = text;
         }
-        var parameters = new ComboBox { Width = 370, ItemsSource = schema.Parameters.Values.ToArray(), DisplayMemberPath = "Caption", SelectedIndex = 0, Margin = new Thickness(0, 8, 8, 0) };
-        var insert = Row(); insert.Children.Add(parameters);
-        Button(insert, "Вставить параметр", () => { if (parameters.SelectedItem is SchemaParameter p) { var text = activeFormat ?? fields["Верхняя полка"]; text.SelectedText = "@@[" + p.Id + "]"; text.Focus(); } });
+        ParameterPicker(schema, () => activeFormat ?? fields["Верхняя полка"]);
         Body.Children.Add(preview);
         var bottom = Row();
         Button(bottom, "Объект предпросмотра…", () => { SaveCurrent(); PickTarget = true; DialogResult = false; });
@@ -145,6 +152,12 @@ public sealed class EditWindow : LeaderWindow
         var top = Field("Верхняя полка", source.Top ?? "");
         var customBottom = new CheckBox { Content = "Свой формат нижней полки", IsChecked = source.Bottom != null, Foreground = Foreground, Margin = new Thickness(0, 10, 0, 0) }; Body.Children.Add(customBottom);
         var bottom = Field("Нижняя полка", source.Bottom ?? "");
+        var activeFormat = top;
+        top.GotKeyboardFocus += (_, _) => activeFormat = top;
+        bottom.GotKeyboardFocus += (_, _) => activeFormat = bottom;
+        ParameterPicker(schema, () => activeFormat, () => {
+            if (activeFormat == bottom) customBottom.IsChecked = true; else customTop.IsChecked = true;
+        });
         var preview = new TextBlock { TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 12, 0, 0) }; Body.Children.Add(preview);
         void Read() { Result.Rule = select.SelectedIndex <= 0 ? "" : rules.Rules[select.SelectedIndex - 1].Id; Result.Top = customTop.IsChecked == true ? top.Text : null; Result.Bottom = customBottom.IsChecked == true ? bottom.Text : null; }
         void Preview()

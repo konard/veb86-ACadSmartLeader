@@ -37,7 +37,7 @@ The development host is Linux and provides .NET SDK 10 but no AutoCAD runtime or
 - [x] Read issue #3, all issue comments, PR #4 conversation/inline/reviews, full specification and related merged PR #2.
 - [x] Core implementation and focused tests (13 passing locally).
 - [x] AutoCAD implementation and WPF interface (dual-target build passed in CI; runtime acceptance pending).
-- [x] Bundle, CI and acceptance tooling (Windows execution pending).
+- [x] Bundle, CI and acceptance tooling (Windows CI execution passed).
 - [ ] Current-commit CI and final review.
 - [ ] AutoCAD 2021/2025 runtime, screenshots, authentic demo DWG and performance acceptance (environment dependency).
 
@@ -46,3 +46,4 @@ The development host is Linux and provides .NET SDK 10 but no AutoCAD runtime or
 - CI run 44055895001, commit 2db698d: Core and both plugin targets passed; menu generation failed with InvalidProgramException at CustomizationSection.MenuGroup (saved log lines 398–401). NuGet supplies reference-only implementations. Replaced the executable AutoCAD menu builder with a CUIX XML/ZIP generator based on Autodesk ADN's MIT sample. Native menu loading remains a CAD acceptance item.
 - An isolated DLL smoke check found no embedded dependencies in the initial .NET 8 library output. Setting CopyLocalLockFileAssemblies populates the embedding target. A fresh process now loads only the plugin bytes and evaluates MOTOR_FULL with its seven embedded dependencies; Windows CI also checks the .NET Framework build in a .NET Framework process.
 - CI run 44057254497, commit a476390: Core's 13 tests and both plugin targets passed. The Framework smoke-check build failed with CS0656, missing Microsoft.CSharp.RuntimeBinder.CSharpArgumentInfo.Create (saved log lines 170–175). Added the explicit Microsoft.CSharp framework reference; both smoke-check targets now compile locally without warnings. Runtime checks remain subject to the next Windows CI run.
+- [CI run 44058181022](https://github.com/konard/veb86-ACadSmartLeader/actions/runs/44058181022), commit 4bb684f: both jobs passed. Saved log lines 184/191 show isolated formula evaluation with 16 embedded dependencies on Framework and seven on .NET 8; line 217 confirms package validation; line 436 reports 13 passing Core tests. Inspected all three WPF render images. The final specification review added parameter insertion to SL_EDIT as well as SL_RULES; the render tool now captures both scroll positions of a long dialog.
