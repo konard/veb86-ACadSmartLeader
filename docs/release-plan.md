@@ -51,8 +51,8 @@ manifest and manual installation instructions were reviewed.
 
 - [x] Complete issue/PR/context review; upstream main is already an ancestor.
 - [x] Implement all requirements and regression checks.
-- [ ] Focused local checks and current-commit CI/artifact verification.
-- [ ] Final diff review, clean working tree, PR metadata and ready state.
+- [x] Focused local checks and implementation-commit CI/artifact verification.
+- [x] Final diff review, clean working tree, PR metadata and ready state.
 - [ ] Licensed AutoCAD 2020–2024 startup loading (requires an external CAD host).
 
 ## Verification evidence
@@ -70,3 +70,38 @@ manifest and manual installation instructions were reviewed.
   case-sensitive strings. The SDK DLL is named `AcMgd.dll` but its identity is
   `acmgd`. Match identities case-insensitively and include all references in
   failure diagnostics; retain the strict expected API version check.
+- Commit `57432dd` passes both [upstream PR CI](https://github.com/veb86/ACadSmartLeader/actions/runs/44068392563)
+  and [fork CI](https://github.com/konard/veb86-ACadSmartLeader/actions/runs/44068381060).
+  Upstream log lines 226/233/240 confirm isolated formula evaluation and SDK
+  references 23.1/24.0/25.0; line 254 confirms WPF insertion; lines 268/286/287
+  confirm package checks, repeated packaging and checksum; line 525 confirms all
+  13 Core tests. Release publication was correctly skipped on both PR/branch runs.
+- Downloaded the [actual ZIP artifact](https://github.com/konard/veb86-ACadSmartLeader/actions/runs/44068381060/artifacts/14321970989),
+  validated it locally with `check.py`, and checked `release-manifest.txt` using
+  `sha256sum --check`. It contains exactly 15 payload files: three DLL/menu/JSON
+  sets, `PackageContents.xml`, notices and `INSTALL.md` (plus one directory entry).
+  It contains no Autodesk DLLs, installer, build logs or stale staging files.
+- Reviewed the complete `gh pr diff 6`, reread all comment endpoints (still empty),
+  and fetched upstream main again: it remains an ancestor. Existing source
+  behavior and newer target builds are preserved. The final documentation commit
+  is checked by the same CI before handoff.
+
+## Blocked runtime verification
+
+Actual startup discovery/loading, the ribbon and `SL_SETTINGS` / `SL_RULES` must
+still be exercised in **each of AutoCAD 2020, 2021, 2022, 2023 and 2024**.
+This is unfinished, not inferred from passing CI: the development container is
+Linux, hosted Windows runners supply reference assemblies but no licensed CAD
+runtime, and connected document-session discovery returned no sessions. No
+available local or connected host can execute these checks. Leave PR #6 unmerged
+until evidence is recorded; the native goal remains unfinished for this criterion.
+
+Reproduction on a licensed host: close AutoCAD, follow the archive's `INSTALL.md`
+under an ordinary user account, launch the selected AutoCAD version without
+`NETLOAD`, record `ACADVER`, and open `SL_SETTINGS` then `SL_RULES`. Confirm the
+ACadSmartLeader ribbon is present, no assembly-load errors are reported and only
+the matching component is loaded. Repeat after restarting AutoCAD and after
+replacing an older bundle with the new whole folder. Record version, commit,
+command log and actual result separately for all five versions. None of these
+five runtime results has been obtained here. Prior issue #3 CAD acceptance stays
+open in `acceptance.md`; it is not silently treated as release verification.
