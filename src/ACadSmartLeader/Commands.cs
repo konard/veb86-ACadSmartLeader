@@ -145,6 +145,7 @@ public sealed class Commands
         using var tr = document.Database.TransactionManager.StartTransaction();
         if (!(tr.GetObject(selected.ObjectId, OpenMode.ForRead) is MLeader leader) || !LeaderFactory.TryData(leader, out var data, out _))
         { document.Editor.WriteMessage("\nВыберите выноску BobrovLeader."); return; }
+        if (leader.ContentType != ContentType.MTextContent) throw new InvalidOperationException("Требуется содержимое MText.");
         if (((LayerTableRecord)tr.GetObject(leader.LayerId, OpenMode.ForRead)).IsLocked) throw new InvalidOperationException("Слой выноски заблокирован.");
         var schema = Plugin.For(document).Schema.Get(); var rules = NodLabelStore.Read(tr, document.Database, out _);
         var resolver = new TargetResolver(tr, document.Database, schema);
@@ -167,6 +168,7 @@ public sealed class Commands
         var rule = target == null ? null : rules.Select(edit.Rule, resolver.Values(target).Template, target.GetType().Name)?.WithFormats(edit.Top, edit.Bottom);
         var label = rule == null || target == null ? null : Plugin.For(document).Evaluator(schema, new[] { rule }, new[] { resolver.Snapshot(target) }).Evaluate(resolver.Snapshot(target), rule);
         var plan = new LeaderUpdatePlan(edit, LeaderFactory.Text(leader), target?.Handle.ToString(), target == null ? null : resolver.Values(target).DeviceId, label, true);
+        if (target != null && rule == null) { plan.Data.State = LeaderState.FormatError; document.Editor.WriteMessage("\nПравило для цели не найдено; текст сохранён."); }
         tr.GetObject(leader.ObjectId, OpenMode.ForWrite);
         if (rebindPoint.HasValue) leader.SetFirstVertex(LeaderUpdater.Lines(leader)[0], rebindPoint.Value);
         if (label != null) { using var text = leader.MText; text.Contents = plan.Text; leader.MText = text; LeaderFactory.SetAttachment(leader, label); }

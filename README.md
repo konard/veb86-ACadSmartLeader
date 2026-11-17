@@ -37,7 +37,7 @@
 
 ## Сборка и проверки
 
-Требуются Git, .NET SDK 8 и для меню/рендера/пакета — Windows. Лицензия AutoCAD нужна для приёмки, для компиляции используются NuGet reference assemblies.
+Требуются Git, .NET SDK 8 и для рендера/пакета — Windows. Генератор CUIX работает и на Linux. Лицензия AutoCAD нужна для приёмки, для компиляции используются NuGet reference assemblies.
 
 ```sh
 git submodule update --init

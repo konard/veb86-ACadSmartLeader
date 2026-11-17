@@ -47,6 +47,12 @@ internal static class LeaderFactory
             var line = leader.AddLeaderLine(arrow); leader.AddLastVertex(line, landing);
             var space = (BlockTableRecord)tr.GetObject(owner, OpenMode.ForWrite);
             space.AppendEntity(leader); tr.AddNewlyCreatedDBObject(leader, true);
+            leader.SetFromStyle(); // Explicitly inherit the style's annotative status.
+            if (leader.Annotative == AnnotativeStates.True)
+            {
+                var context = db.ObjectContextManager.GetContextCollection("ACDB_ANNOTATIONSCALES").CurrentContext;
+                if (context != null && !leader.HasContext(context)) leader.AddContext(context);
+            }
             data.Text = LeaderData.TextStamp(text.MText); data.State = text.Errors.Count > 0 ? LeaderState.FormatError : LeaderState.Bound;
             WriteData(tr, db, leader, data);
             return leader;
