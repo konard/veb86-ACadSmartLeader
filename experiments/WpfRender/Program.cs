@@ -68,7 +68,14 @@ internal static class Program
             void Save(string fileName)
             {
                 var bitmap = new RenderTargetBitmap((int)content.ActualWidth, (int)content.ActualHeight, 96, 96, PixelFormats.Pbgra32);
-                bitmap.Render(content); var encoder = new PngBitmapEncoder(); encoder.Frames.Add(BitmapFrame.Create(bitmap));
+                // Render the window background as well as its client controls. The bitmap's
+                // client-sized bounds exclude the native frame that WPF cannot capture.
+                bitmap.Render(window);
+                var pixel = new byte[4]; bitmap.CopyPixels(new Int32Rect(0, 0, 1, 1), pixel, 4, 0);
+                var expected = ((SolidColorBrush)window.Background).Color;
+                if (pixel[0] != expected.B || pixel[1] != expected.G || pixel[2] != expected.R || pixel[3] != 255)
+                    throw new InvalidOperationException("The render must include the opaque window background.");
+                var encoder = new PngBitmapEncoder(); encoder.Frames.Add(BitmapFrame.Create(bitmap));
                 using var stream = File.Create(Path.Combine(output, fileName)); encoder.Save(stream);
             }
         }
