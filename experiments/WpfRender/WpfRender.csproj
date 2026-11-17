@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><OutputType>WinExe</OutputType><TargetFramework>net8.0-windows</TargetFramework><UseWPF>true</UseWPF><EnableWindowsTargeting>true</EnableWindowsTargeting></PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/ACadSmartLeader.Core/ACadSmartLeader.Core.csproj" />
+    <Compile Include="../../src/ACadSmartLeader/UI/*.cs" Link="UI/%(Filename)%(Extension)" />
+    <None Include="../../examples/label-rules.json" Link="label-rules.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../external/acadPaletteSetXDATA/examples/schema.json" Link="schema.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

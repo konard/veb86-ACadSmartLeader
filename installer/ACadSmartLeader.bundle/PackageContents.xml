@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ApplicationPackage SchemaVersion="1.0" AutodeskProduct="AutoCAD" ProductType="Application" Name="ACadSmartLeader" AppVersion="0.1.0" ProductCode="{AEF87BF3-C34F-465C-A8B4-AEF31332CB39}" UpgradeCode="{B135F3B5-693A-4FC9-9414-443ED38DC223}" Description="Умные выноски BobrovXDATA" Author="veb86">
+  <CompanyDetails Name="veb86" Url="https://github.com/veb86/ACadSmartLeader" />
+  <Components>
+    <RuntimeRequirements OS="Win64" Platform="AutoCAD*" SeriesMin="R24.0" SeriesMax="R24.3" />
+    <ComponentEntry AppName="ACadSmartLeader" AppType=".Net" ModuleName="./Contents/AutoCAD2021-2024/ACadSmartLeader.dll" LoadOnAutoCADStartup="True" LoadOnCommandInvocation="True">
+      <Commands GroupName="ACadSmartLeader">
+        <Command Global="SL_CREATE" Local="SL_CREATE" /><Command Global="SL_UPDATE" Local="SL_UPDATE" />
+        <Command Global="SL_EDIT" Local="SL_EDIT" /><Command Global="SL_RULES" Local="SL_RULES" />
+        <Command Global="SL_RULES_IMPORT" Local="SL_RULES_IMPORT" /><Command Global="SL_RULES_EXPORT" Local="SL_RULES_EXPORT" />
+        <Command Global="SL_SETTINGS" Local="SL_SETTINGS" /><Command Global="SL_SELECT_PROBLEMS" Local="SL_SELECT_PROBLEMS" />
+      </Commands>
+    </ComponentEntry>
+    <ComponentEntry AppName="ACadSmartLeaderMenu" ModuleName="./Contents/AutoCAD2021-2024/ACadSmartLeader.cuix" />
+  </Components>
+  <Components>
+    <RuntimeRequirements OS="Win64" Platform="AutoCAD*" SeriesMin="R25.0" />
+    <ComponentEntry AppName="ACadSmartLeader" AppType=".Net" ModuleName="./Contents/AutoCAD2025/ACadSmartLeader.dll" LoadOnAutoCADStartup="True" LoadOnCommandInvocation="True">
+      <Commands GroupName="ACadSmartLeader">
+        <Command Global="SL_CREATE" Local="SL_CREATE" /><Command Global="SL_UPDATE" Local="SL_UPDATE" />
+        <Command Global="SL_EDIT" Local="SL_EDIT" /><Command Global="SL_RULES" Local="SL_RULES" />
+        <Command Global="SL_RULES_IMPORT" Local="SL_RULES_IMPORT" /><Command Global="SL_RULES_EXPORT" Local="SL_RULES_EXPORT" />
+        <Command Global="SL_SETTINGS" Local="SL_SETTINGS" /><Command Global="SL_SELECT_PROBLEMS" Local="SL_SELECT_PROBLEMS" />
+      </Commands>
+    </ComponentEntry>
+    <ComponentEntry AppName="ACadSmartLeaderMenu" ModuleName="./Contents/AutoCAD2025/ACadSmartLeader.cuix" />
+  </Components>
+</ApplicationPackage>

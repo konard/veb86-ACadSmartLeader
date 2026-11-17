@@ -1,0 +1,50 @@
+name: Build and test
+on:
+  push:
+    branches: ['main', 'issue-3-7181973aa3f2']
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  core:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - run: dotnet test tests/ACadSmartLeader.Core.Tests -c Release --logger 'trx;LogFileName=core.trx' --blame-hang-timeout 2m
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: core-test-results
+          path: tests/ACadSmartLeader.Core.Tests/TestResults/
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - run: dotnet build src/ACadSmartLeader -c Release -m:1
+      - run: dotnet build experiments/AssemblySmoke -c Release -m:1
+      - run: experiments/AssemblySmoke/bin/Release/net48/AssemblySmoke.exe src/ACadSmartLeader/bin/Release/net48/ACadSmartLeader.dll examples/demo-schema.json examples/label-rules.json
+      - run: dotnet experiments/AssemblySmoke/bin/Release/net8.0/AssemblySmoke.dll src/ACadSmartLeader/bin/Release/net8.0-windows/ACadSmartLeader.dll examples/demo-schema.json examples/label-rules.json
+      - run: dotnet run --project experiments/MenuBuilder -c Release -- artifacts/ACadSmartLeader.cuix
+      - run: dotnet run --project experiments/WpfRender -c Release -- artifacts/screenshots
+      - shell: pwsh
+        run: ./build/package.ps1
+      - run: python experiments/PackageCheck/check.py artifacts/ACadSmartLeader-0.1.0.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ACadSmartLeader-0.1.0
+          path: |
+            artifacts/ACadSmartLeader-0.1.0.zip
+            artifacts/screenshots/

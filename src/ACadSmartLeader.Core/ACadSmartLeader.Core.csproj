@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><TargetFramework>netstandard2.0</TargetFramework></PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../external/acadPaletteSetXDATA/src/AcadPaletteSetXData.Core/*.cs" Link="PaletteCore/%(Filename)%(Extension)" />
+    <PackageReference Include="NCalc" Version="[7.4.0]" />
+  </ItemGroup>
+</Project>
