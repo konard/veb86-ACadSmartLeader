@@ -1,7 +1,8 @@
 name: Build and test
 on:
   push:
-    branches: ['main', 'issue-3-7181973aa3f2']
+    branches: ['main', 'issue-5-ee54ffcc0e3e']
+    tags: ['v*']
   pull_request:
   workflow_dispatch:
 permissions:
@@ -26,6 +27,8 @@ jobs:
   windows:
     runs-on: windows-latest
     timeout-minutes: 15
+    outputs:
+      version: ${{ steps.version.outputs.version }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -33,18 +36,96 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
+      - name: Read and validate release version
+        id: version
+        shell: pwsh
+        env:
+          REF_TYPE: ${{ github.ref_type }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          [xml]$props = Get-Content Directory.Build.props -Raw
+          $version = [string]$props.Project.PropertyGroup.Version
+          if ($version -notmatch '^\d+\.\d+\.\d+$') { throw "Invalid release version: $version" }
+          if ($env:REF_TYPE -eq 'tag' -and $env:REF_NAME -ne "v$version") {
+            throw "Tag $env:REF_NAME must match Directory.Build.props Version (v$version)."
+          }
+          "version=$version" >> $env:GITHUB_OUTPUT
+      - run: python -m unittest discover -s experiments/PackageCheck -p 'test_*.py'
       - run: dotnet build src/ACadSmartLeader -c Release -m:1
       - run: dotnet build experiments/AssemblySmoke -c Release -m:1
-      - run: experiments/AssemblySmoke/bin/Release/net48/AssemblySmoke.exe src/ACadSmartLeader/bin/Release/net48/ACadSmartLeader.dll examples/demo-schema.json examples/label-rules.json
-      - run: dotnet experiments/AssemblySmoke/bin/Release/net8.0/AssemblySmoke.dll src/ACadSmartLeader/bin/Release/net8.0-windows/ACadSmartLeader.dll examples/demo-schema.json examples/label-rules.json
+      - run: experiments/AssemblySmoke/bin/Release/net48/AssemblySmoke.exe src/ACadSmartLeader/bin/Release/net47/ACadSmartLeader.dll examples/demo-schema.json examples/label-rules.json 23.1
+      - run: experiments/AssemblySmoke/bin/Release/net48/AssemblySmoke.exe src/ACadSmartLeader/bin/Release/net48/ACadSmartLeader.dll examples/demo-schema.json examples/label-rules.json 24.0
+      - run: dotnet experiments/AssemblySmoke/bin/Release/net8.0/AssemblySmoke.dll src/ACadSmartLeader/bin/Release/net8.0-windows/ACadSmartLeader.dll examples/demo-schema.json examples/label-rules.json 25.0
       - run: dotnet run --project experiments/MenuBuilder -c Release -- artifacts/ACadSmartLeader.cuix
       - run: dotnet run --project experiments/WpfRender -c Release -- artifacts/screenshots
       - shell: pwsh
         run: ./build/package.ps1
-      - run: python experiments/PackageCheck/check.py artifacts/ACadSmartLeader-0.1.0.zip
+      - run: python experiments/PackageCheck/check.py artifacts/ACadSmartLeader-manual-install-v${{ steps.version.outputs.version }}.zip
+      - name: Verify packaging is repeatable and checksum matches
+        shell: pwsh
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          # Old staging content must never become part of the new archive.
+          New-Item -ItemType Directory -Force artifacts/ACadSmartLeader.bundle | Out-Null
+          Set-Content artifacts/ACadSmartLeader.bundle/stale.dll 'stale build'
+          ./build/package.ps1
+          python experiments/PackageCheck/check.py "artifacts/ACadSmartLeader-manual-install-v$env:VERSION.zip"
+          if ($LASTEXITCODE -ne 0) { throw 'Repeated packaging failed validation' }
+          $line = (Get-Content artifacts/release-manifest.txt -Raw).Trim()
+          $expected = (Get-FileHash "artifacts/ACadSmartLeader-manual-install-v$env:VERSION.zip" -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($line -cne "$expected  ACadSmartLeader-manual-install-v$env:VERSION.zip") { throw 'SHA256 manifest mismatch' }
+          Write-Host 'RELEASE_CHECKSUM_OK'
       - uses: actions/upload-artifact@v4
         with:
-          name: ACadSmartLeader-0.1.0
+          name: ACadSmartLeader-${{ steps.version.outputs.version }}
+          if-no-files-found: error
           path: |
-            artifacts/ACadSmartLeader-0.1.0.zip
+            artifacts/ACadSmartLeader-manual-install-v${{ steps.version.outputs.version }}.zip
+            artifacts/release-manifest.txt
             artifacts/screenshots/
+  release:
+    name: Publish release
+    needs: [core, windows]
+    if: >-
+      github.event_name != 'pull_request' &&
+      (github.ref == format('refs/heads/{0}', github.event.repository.default_branch) ||
+       github.ref_type == 'tag')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    concurrency:
+      group: publish-release
+      cancel-in-progress: false
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      VERSION: ${{ needs.windows.outputs.version }}
+      TAG: v${{ needs.windows.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Preserve existing releases
+        id: existing
+        run: |
+          gh api "repos/$GH_REPO/releases" --paginate --jq '.[].tag_name' > existing-releases.txt
+          if grep -Fxq "$TAG" existing-releases.txt; then
+            echo "Release $TAG already exists. Bump Version and AppVersion for the next release."
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/download-artifact@v4
+        if: steps.existing.outputs.publish == 'true'
+        with:
+          name: ACadSmartLeader-${{ needs.windows.outputs.version }}
+          path: dist
+      - name: Verify downloaded archive
+        if: steps.existing.outputs.publish == 'true'
+        working-directory: dist
+        run: sha256sum --check release-manifest.txt
+      - name: Create GitHub release with manual installation package
+        if: steps.existing.outputs.publish == 'true'
+        run: |
+          gh release create "$TAG" "dist/ACadSmartLeader-manual-install-v$VERSION.zip" dist/release-manifest.txt \
+            --target "$GITHUB_SHA" --title "ACadSmartLeader $VERSION" --notes-file build/release-notes.md

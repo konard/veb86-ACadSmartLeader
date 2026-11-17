@@ -1,10 +1,14 @@
 using System.Globalization;
 using System.Reflection;
 
-if (args.Length != 3) throw new ArgumentException("Usage: AssemblySmoke <plugin.dll> <schema.json> <rules.json>");
+if (args.Length != 4) throw new ArgumentException("Usage: AssemblySmoke <plugin.dll> <schema.json> <rules.json> <AutoCAD API major.minor>");
 // An isolated process has no project reference to the plugin, Core or NCalc. Load from bytes
 // to prevent the dependency resolver from finding adjacent files by the plugin's location.
 var assembly = Assembly.Load(File.ReadAllBytes(args[0]));
+var api = new Version(args[3]);
+var acadReferences = assembly.GetReferencedAssemblies().Where(a => a.Name == "AcMgd" || a.Name == "AcDbMgd" || a.Name == "AcCoreMgd").ToArray();
+if (acadReferences.Length != 3 || acadReferences.Any(a => a.Version!.Major != api.Major || a.Version.Minor != api.Minor))
+    throw new InvalidOperationException("Wrong AutoCAD API references: " + string.Join(", ", acadReferences.Select(a => a.FullName)));
 var resources = assembly.GetManifestResourceNames();
 if (!resources.Any(n => n.StartsWith("Embedded.NCalc", StringComparison.Ordinal)) ||
     resources.Any(n => n.StartsWith("Embedded.Ac", StringComparison.OrdinalIgnoreCase) || n.StartsWith("Embedded.Ad", StringComparison.OrdinalIgnoreCase)))
