@@ -43,6 +43,14 @@ internal static class Program
                 insert.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
                 if (window.Result.Top != "@@[Power]" || window.Result.Bottom != null)
                     throw new InvalidOperationException("Insertion must enable only the top override.");
+                var overrides = Descendants<CheckBox>(window).ToArray();
+                overrides[0].IsChecked = false;
+                overrides[0].RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                if (window.Result.Top != null) throw new InvalidOperationException("Unchecking must restore the rule format.");
+                fields[0].SelectAll();
+                insert.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                if (window.Result.Top != "@@[Power]")
+                    throw new InvalidOperationException("Reinserting identical text must still enable the override and update the preview.");
                 if (!fields[1].Focus()) throw new InvalidOperationException("Cannot focus the bottom format.");
                 picker.SelectedItem = schema.Parameters["Device_Number"];
                 insert.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));

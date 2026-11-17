@@ -171,7 +171,8 @@ public sealed class EditWindow : LeaderWindow
             var text = evaluator.Evaluate(target, rule); preview.Text = "Предпросмотр: " + text.Top + "\n────────────────────────\n" + text.Bottom + "\n" + string.Join("\n", text.Errors);
         }
         select.SelectionChanged += (_, _) => Preview(); top.TextChanged += (_, _) => Preview(); bottom.TextChanged += (_, _) => Preview();
-        customTop.Click += (_, _) => Preview(); customBottom.Click += (_, _) => Preview();
+        customTop.Checked += (_, _) => Preview(); customTop.Unchecked += (_, _) => Preview();
+        customBottom.Checked += (_, _) => Preview(); customBottom.Unchecked += (_, _) => Preview();
         var row = Row();
         Button(row, "Перепривязать…", () => { Read(); Rebind = true; DialogResult = false; });
         Button(row, "Сохранить", () => { try { Read(); Result.Write(); DialogResult = true; } catch (FormatException e) { Failure(e); } });
