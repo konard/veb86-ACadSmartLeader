@@ -22,7 +22,7 @@ Branch: `issue-3-7181973aa3f2`. No required sub-issues or additional feedback we
 | 10 | Actual palette calculation, defaults/enums/precision/culture, errors/empty values, MText escape, schema cache | Real example schema evaluation tests |
 | 11 | PickFirst/All/Select/Force, reports, problems, locked/xref skip, changed-only writes, one Undo | Update-plan tests; AutoCAD transactional acceptance |
 | 11.2 | Off/Regen/RegenAll, Idle scheduling, no reentry, per-document cleanup | Scheduler tests; AutoCAD REGEN/LISP/multi-document acceptance |
-| 12 | All nine SL commands, preview/parameter insertion/rebind, ribbon/context menu | Both target builds; AutoCAD WPF and menu acceptance |
+| 12 | All eight SL commands, preview/parameter insertion/rebind, ribbon/context menu | Both target builds; AutoCAD WPF and menu acceptance |
 | 13, 14 | Missing schema/data, schema changes, offscreen/all-space search, target reuse, 1000-leader performance | Core tests; AutoCAD demo/performance acceptance |
 | 16–18 | Demo drawing, both palette load orders, persistence without plugin, runtime/visual risks | Reproducible acceptance commands and results, explicitly distinguish unrun CAD checks |
 
@@ -35,8 +35,8 @@ The development host is Linux and provides .NET SDK 10 but no AutoCAD runtime or
 ## Status
 
 - [x] Read issue #3, all issue comments, PR #4 conversation/inline/reviews, full specification and related merged PR #2.
-- [ ] Core implementation and focused tests.
-- [ ] AutoCAD implementation and WPF interface.
-- [ ] Bundle, CI and acceptance tooling.
+- [x] Core implementation and focused tests (12 passing locally).
+- [x] AutoCAD implementation and WPF interface (initial dual-target build passed; later changes checked in CI).
+- [x] Bundle, CI and acceptance tooling (Windows execution pending).
 - [ ] Current-commit CI and final review.
 - [ ] AutoCAD 2021/2025 runtime, screenshots, authentic demo DWG and performance acceptance (environment dependency).
