@@ -6,7 +6,7 @@
 
 `tests/ACadSmartLeader.Core.Tests` использует закреплённый исходный Core и настоящую схему примера. Покрыты мотор/кабель и Power 7.5 → 11, формулы и точность ru-RU, пустые значения и defaults, ошибки, экранирование MText, отсутствие схемы/данных, порядок правил, неизвестные JSON-поля, кодек BobrovLeader v1, лимит UTF-8/хеш текста, планы обновления, приоритет привязки/неоднозначный GUID, геометрический допуск и очередь REGEN без повторного входа.
 
-Windows CI компилирует net48 и net8.0-windows, генерирует CUIX и пакет, сохраняет снимки WPF. Это проверка компиляции/редакторов, не проверка native AutoCAD. Исходная схема дополнена включением `Device_Number` в шаблон MOTOR в `examples/demo-schema.json`, исходные файлы submodule не изменяются.
+Windows CI компилирует net48 и net8.0-windows, проверяет формулу из изолированной DLL каждого runtime, вставку параметров в обе полки WPF-редактора, структуру CUIX и пакета. Сохранены рендеры [правил](screenshots/rules-dark.png), [их нижней части](screenshots/rules-dark-bottom.png), [редактора](screenshots/edit-light.png) и [настроек](screenshots/settings-dark.png). Это проверка компиляции/редакторов, не проверка native AutoCAD. Исходная схема дополнена включением `Device_Number` в шаблон MOTOR в `examples/demo-schema.json`, исходные файлы submodule не изменяются.
 
 ## Подготовка CAD-хоста
 
