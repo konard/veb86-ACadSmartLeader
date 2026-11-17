@@ -3,6 +3,7 @@ $ErrorActionPreference = 'Stop'
 $bundle = Join-Path $Output 'ACadSmartLeader.bundle'
 New-Item -ItemType Directory -Force $bundle | Out-Null
 Copy-Item installer/ACadSmartLeader.bundle/PackageContents.xml $bundle
+Copy-Item THIRD-PARTY-NOTICES.txt $bundle
 foreach ($target in @(@('net48','AutoCAD2021-2024'), @('net8.0-windows','AutoCAD2025'))) {
     $destination = Join-Path $bundle ('Contents/' + $target[1])
     New-Item -ItemType Directory -Force $destination | Out-Null

@@ -48,8 +48,7 @@ dotnet build src/ACadSmartLeader -c Release -m:1
 На Windows из корня репозитория:
 
 ```powershell
-dotnet build experiments/MenuBuilder -c Release -m:1
-./experiments/MenuBuilder/bin/Release/net48/MenuBuilder.exe artifacts/ACadSmartLeader.cuix
+dotnet run --project experiments/MenuBuilder -c Release -- artifacts/ACadSmartLeader.cuix
 dotnet run --project experiments/WpfRender -c Release -- artifacts/screenshots
 ./build/package.ps1
 ```

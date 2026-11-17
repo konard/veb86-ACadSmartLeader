@@ -55,6 +55,19 @@ public sealed class CoreTests
     }
 
     [Fact]
+    public void EnumBooleanCultureAndShelfOverridesUsePaletteSemantics()
+    {
+        var rule = new LabelRule { Id = "T", Top = "@@[Voltage] / @@[Voltage:key] / @@[Tray_Covered] / @@@@", Bottom = "@@[Power]" };
+        var target = Target("MOTOR", ("Voltage", "_AC_380V_50Hz"), ("Tray_Covered", true), ("Power", 7.5));
+        var text = new LabelEvaluator(Schema(), new[] { rule }, Ru).Evaluate(target, rule);
+        Assert.Equal("380 В / _AC_380V_50Hz / Да / @@", text.Top); Assert.Equal("7,50", text.Bottom); Assert.Empty(text.Errors);
+        var overridden = rule.WithFormats(null, "");
+        var engine = new LabelEvaluator(Schema(), new[] { overridden }, CultureInfo.GetCultureInfo("en-US"));
+        Assert.False(engine.Evaluate(target, overridden).HasBottom); Assert.Equal("@@[Power]", rule.Bottom);
+        Assert.Equal("7.50", new LabelEvaluator(Schema(), new[] { rule }, CultureInfo.GetCultureInfo("en-US")).Evaluate(target, rule).Bottom);
+    }
+
+    [Fact]
     public void RemovedTargetDataUsesEmptyEvenWithSchemaDefaults()
     {
         var rule = new LabelRule { Id = "R", Top = "@@[Device_Type]", Empty = "—" };

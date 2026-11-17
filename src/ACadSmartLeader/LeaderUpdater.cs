@@ -48,6 +48,7 @@ internal static class LeaderUpdater
             if (!LeaderFactory.TryData(leader, out var data, out var error))
             { if (error != null) { total++; errors++; Warn(leader.Handle + ": " + error); } continue; }
             total++;
+            if (leader.ContentType != ContentType.MTextContent) { errors++; Warn(leader.Handle + ": требуется содержимое MText."); continue; }
             if (((LayerTableRecord)tr.GetObject(leader.LayerId, OpenMode.ForRead)).IsLocked)
             { skipped++; Warn(leader.Handle + ": слой заблокирован; пропущена."); continue; }
             var owner = tr.GetObject(leader.OwnerId, OpenMode.ForRead) as BlockTableRecord;

@@ -19,11 +19,14 @@ public sealed class Plugin : IExtensionApplication
     internal static UserSettings Settings { get; } = UserSettings.Load();
     private ContextMenuExtension? context;
     private bool menuLoaded;
+    private readonly StartupReadiness readiness = new StartupReadiness();
     public void Initialize()
     {
         EmbeddedAssemblies.Register();
         foreach (Document document in AcApplication.DocumentManager) For(document);
         AcApplication.DocumentManager.DocumentCreated += Created;
+        AcApplication.DocumentManager.DocumentCreateStarted += Opening;
+        AcApplication.DocumentManager.DocumentCreationCanceled += OpenCancelled;
         AcApplication.DocumentManager.DocumentToBeDestroyed += Destroyed;
         AcApplication.Idle += Idle;
         context = new ContextMenuExtension { Title = "ACadSmartLeader" };
@@ -38,7 +41,9 @@ public sealed class Plugin : IExtensionApplication
         return state;
     }
     internal static void ClearPending() { foreach (var state in documents.Values) state.Schedule.Clear(); }
-    private void Created(object sender, DocumentCollectionEventArgs e) => For(e.Document);
+    private void Opening(object sender, DocumentCollectionEventArgs e) => readiness.DocumentCreateStarted();
+    private void OpenCancelled(object sender, DocumentCollectionEventArgs e) => readiness.DocumentCreateFinished();
+    private void Created(object sender, DocumentCollectionEventArgs e) { readiness.DocumentCreateFinished(); For(e.Document); }
     private void Destroyed(object sender, DocumentCollectionEventArgs e)
     {
         if (documents.TryGetValue(e.Document, out var state)) { documents.Remove(e.Document); state.Dispose(); }
@@ -46,7 +51,7 @@ public sealed class Plugin : IExtensionApplication
     private void Idle(object? sender, EventArgs e)
     {
         var document = AcApplication.DocumentManager.MdiActiveDocument;
-        if (document == null || !document.Editor.IsQuiescent) return;
+        if (document == null || !readiness.IsReady(true, AcApplication.IsQuiescent, document.Editor.IsQuiescent, document.CommandInProgress)) return;
         if (!menuLoaded)
         {
             menuLoaded = true;
@@ -68,6 +73,8 @@ public sealed class Plugin : IExtensionApplication
     {
         AcApplication.Idle -= Idle;
         AcApplication.DocumentManager.DocumentCreated -= Created;
+        AcApplication.DocumentManager.DocumentCreateStarted -= Opening;
+        AcApplication.DocumentManager.DocumentCreationCanceled -= OpenCancelled;
         AcApplication.DocumentManager.DocumentToBeDestroyed -= Destroyed;
         foreach (var state in documents.Values.ToArray()) state.Dispose(); documents.Clear();
         if (context != null) { Autodesk.AutoCAD.ApplicationServices.Application.RemoveObjectContextMenuExtension(RXObject.GetClass(typeof(MLeader)), context); context.Dispose(); context = null; }

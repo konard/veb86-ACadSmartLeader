@@ -34,11 +34,14 @@ jobs:
         with:
           dotnet-version: '8.0.x'
       - run: dotnet build src/ACadSmartLeader -c Release -m:1
-      - run: dotnet build experiments/MenuBuilder -c Release -m:1
-      - run: experiments/MenuBuilder/bin/Release/net48/MenuBuilder.exe artifacts/ACadSmartLeader.cuix
+      - run: dotnet build experiments/AssemblySmoke -c Release -m:1
+      - run: experiments/AssemblySmoke/bin/Release/net48/AssemblySmoke.exe src/ACadSmartLeader/bin/Release/net48/ACadSmartLeader.dll examples/demo-schema.json examples/label-rules.json
+      - run: dotnet experiments/AssemblySmoke/bin/Release/net8.0/AssemblySmoke.dll src/ACadSmartLeader/bin/Release/net8.0-windows/ACadSmartLeader.dll examples/demo-schema.json examples/label-rules.json
+      - run: dotnet run --project experiments/MenuBuilder -c Release -- artifacts/ACadSmartLeader.cuix
       - run: dotnet run --project experiments/WpfRender -c Release -- artifacts/screenshots
       - shell: pwsh
         run: ./build/package.ps1
+      - run: python experiments/PackageCheck/check.py artifacts/ACadSmartLeader-0.1.0.zip
       - uses: actions/upload-artifact@v4
         with:
           name: ACadSmartLeader-0.1.0
