@@ -50,7 +50,23 @@ manifest and manual installation instructions were reviewed.
 ## Progress
 
 - [x] Complete issue/PR/context review; upstream main is already an ancestor.
-- [ ] Implement all requirements and regression checks.
+- [x] Implement all requirements and regression checks.
 - [ ] Focused local checks and current-commit CI/artifact verification.
 - [ ] Final diff review, clean working tree, PR metadata and ready state.
 - [ ] Licensed AutoCAD 2020–2024 startup loading (requires an external CAD host).
+
+## Verification evidence
+
+- The new regression failed against the original manifest: `package-before.log`
+  lines 5–14 report the missing 2020 component. The same five Python tests and
+  standalone manifest check pass after the change (`ci-logs/package-after.log`).
+- Actionlint 1.7.12 validates the release workflow without findings.
+- Runs [44067973474](https://github.com/veb86/ACadSmartLeader/actions/runs/44067973474)
+  and [44067963566](https://github.com/konard/veb86-ACadSmartLeader/actions/runs/44067963566)
+  are for commit `c1ac4d2`, after its 2026-11-17 10:46:45 UTC commit time. All
+  three plugin targets compiled with zero warnings/errors and all 13 Core tests
+  passed. The new SDK-reference check failed (`ci-logs/build-44067973474.log`
+  lines 227–229; fork log lines 211–213) because it matched assembly names with
+  case-sensitive strings. The SDK DLL is named `AcMgd.dll` but its identity is
+  `acmgd`. Match identities case-insensitively and include all references in
+  failure diagnostics; retain the strict expected API version check.

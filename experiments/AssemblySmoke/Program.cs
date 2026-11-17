@@ -6,9 +6,12 @@ if (args.Length != 4) throw new ArgumentException("Usage: AssemblySmoke <plugin.
 // to prevent the dependency resolver from finding adjacent files by the plugin's location.
 var assembly = Assembly.Load(File.ReadAllBytes(args[0]));
 var api = new Version(args[3]);
-var acadReferences = assembly.GetReferencedAssemblies().Where(a => a.Name == "AcMgd" || a.Name == "AcDbMgd" || a.Name == "AcCoreMgd").ToArray();
+var references = assembly.GetReferencedAssemblies();
+// SDK filenames and metadata identities use different casing (AcMgd/acmgd).
+var acadNames = new HashSet<string>(new[] { "AcMgd", "AcDbMgd", "AcCoreMgd" }, StringComparer.OrdinalIgnoreCase);
+var acadReferences = references.Where(a => acadNames.Contains(a.Name!)).ToArray();
 if (acadReferences.Length != 3 || acadReferences.Any(a => a.Version!.Major != api.Major || a.Version.Minor != api.Minor))
-    throw new InvalidOperationException("Wrong AutoCAD API references: " + string.Join(", ", acadReferences.Select(a => a.FullName)));
+    throw new InvalidOperationException("Expected AutoCAD API " + api + "; assembly references: " + string.Join(", ", references.Select(a => a.FullName)));
 var resources = assembly.GetManifestResourceNames();
 if (!resources.Any(n => n.StartsWith("Embedded.NCalc", StringComparison.Ordinal)) ||
     resources.Any(n => n.StartsWith("Embedded.Ac", StringComparison.OrdinalIgnoreCase) || n.StartsWith("Embedded.Ad", StringComparison.OrdinalIgnoreCase)))
@@ -30,4 +33,4 @@ dynamic target = Make(palette + "EntityDataSnapshot", "1F", "BlockReference", va
 dynamic evaluator = Make(leader + "LabelEvaluator", (object)snapshot, (object)rules.Rules, CultureInfo.GetCultureInfo("ru-RU"), null);
 dynamic text = evaluator.Evaluate(target, rules.Rules[1]); // MOTOR_FULL exercises NCalc formula mode.
 if (text.Bottom != "7,50 кВт, 15,2 А" || text.Errors.Count != 0) throw new InvalidOperationException("Embedded formula failed: " + text.Bottom);
-Console.WriteLine("ASSEMBLY_SMOKE_OK: " + Path.GetFileName(args[0]) + "; " + text.Bottom + "; embedded assemblies=" + resources.Length);
+Console.WriteLine("ASSEMBLY_SMOKE_OK: " + Path.GetFileName(args[0]) + "; API=" + api + "; " + text.Bottom + "; embedded assemblies=" + resources.Length);
