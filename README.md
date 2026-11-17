@@ -6,7 +6,11 @@
 
 ## Установка
 
-Артефакт workflow **Build and test** содержит `ACadSmartLeader-0.1.0.zip`. Распакуйте папку `ACadSmartLeader.bundle` в `%APPDATA%\Autodesk\ApplicationPlugins`, затем перезапустите AutoCAD. При необходимости добавьте путь в доверенные расположения AutoCAD. Пакет содержит отдельные сборки для AutoCAD 2021–2024 (.NET Framework 4.8) и 2025+ (.NET 8), меню CUIX, исходные правила и демонстрационную схему.
+В каждом [выпуске](https://github.com/veb86/ACadSmartLeader/releases) публикуется `ACadSmartLeader-manual-install-v<версия>.zip` и `release-manifest.txt` с SHA256. Тот же ZIP доступен в артефакте workflow **Build and test** до выпуска. Установка **без инсталлятора и прав администратора**: закройте AutoCAD, разблокируйте скачанный ZIP в свойствах Windows, распакуйте его и скопируйте **всю папку `ACadSmartLeader.bundle`** в `%APPDATA%\Autodesk\ApplicationPlugins`. Перезапустите AutoCAD — пакет загружается автоматически; проверьте командой `SL_SETTINGS`.
+
+Все файлы установки находятся в `%APPDATA%\Autodesk\ApplicationPlugins\ACadSmartLeader.bundle`. Пакет содержит отдельные сборки для **AutoCAD 2020 x64** (API 23.1, .NET Framework 4.7), **2021–2024 x64** (API 24.0, .NET Framework 4.8) и сохранённую сборку **2025+** (.NET 8), меню CUIX, исходные правила и демонстрационную схему. AutoCAD выбирает одну подходящую сборку по `PackageContents.xml`. AutoCAD LT не поддерживается.
+
+[Полная инструкция](installer/INSTALL.md), также включённая в ZIP как `INSTALL.md`, описывает структуру папок, обновление, удаление, `TRUSTEDPATHS` и `APPAUTOLOAD`. При обновлении заменяйте bundle целиком после закрытия AutoCAD; для удаления достаточно удалить эту папку. Настройки хранятся отдельно в `%APPDATA%\ACadSmartLeader`.
 
 Альтернатива для разработки — `NETLOAD` соответствующей `ACadSmartLeader.dll`; JSON и CUIX должны лежать рядом. Зависимости NCalc 7.4.0 встроены в DLL, библиотеки AutoCAD поставляются самим AutoCAD. Палитра не обязательна для запуска выносок, но нужна для удобного редактирования данных цели.
 
@@ -59,7 +63,9 @@ dotnet run --project experiments/WpfRender -c Release -- artifacts/screenshots
 ./build/package.ps1
 ```
 
-CI выполняет тесты Core, обе сборки плагина, вычисление формул из каждой изолированной DLL, создание меню, проверку вставки параметров в обе полки редактора, рендер настоящих WPF-диалогов и упаковку. [План и матрица требований](docs/implementation-plan.md) связывают требования с проверками. При разработке на Linux с одним runtime .NET 10 тесты можно запускать с `DOTNET_ROLL_FORWARD=Major`; CI использует .NET 8.
+CI выполняет тесты Core, три сборки плагина, проверку версий API Autodesk и вычисление формул из каждой изолированной DLL, создание меню, проверку вставки параметров в обе полки редактора, рендер настоящих WPF-диалогов и упаковку. Проверяются диапазоны AutoCAD, команды автозагрузки, полный состав ZIP, повторная упаковка и SHA256. Лёгкая локальная проверка: `python -m unittest discover -s experiments/PackageCheck -p 'test_*.py'`. [План выпуска](docs/release-plan.md) и [матрица исходного ТЗ](docs/implementation-plan.md) связывают требования с проверками. При разработке на Linux с одним runtime .NET 10 тесты можно запускать с `DOTNET_ROLL_FORWARD=Major`; CI использует .NET 8.
+
+После успешных заданий Core и Windows workflow публикует выпуск автоматически при push в основную ветку с новой версией, при теге `v<версия>` либо при ручном запуске из основной ветки. Перед следующим выпуском согласованно измените `Version` в `Directory.Build.props` и `AppVersion` в `installer/ACadSmartLeader.bundle/PackageContents.xml`; для новой версии задайте новый `ProductCode`, сохраняя `UpgradeCode`. Тег должен совпадать с версией, иначе проверка завершится ошибкой. Готовый выпуск не перезаписывается. PR и push в рабочую ветку только проверяют пакет и сохраняют артефакт, без публикации релиза.
 
 ## Демонстрация и эксперименты
 
