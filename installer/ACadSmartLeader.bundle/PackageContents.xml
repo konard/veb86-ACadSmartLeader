@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ApplicationPackage SchemaVersion="1.0" AutodeskProduct="AutoCAD" ProductType="Application" Name="ACadSmartLeader" AppVersion="0.1.1" ProductCode="{D15744B4-648A-48DA-B6B2-C72E0202DC45}" UpgradeCode="{B135F3B5-693A-4FC9-9414-443ED38DC223}" Description="Умные выноски BobrovXDATA" Author="veb86">
+<ApplicationPackage SchemaVersion="1.0" AutodeskProduct="AutoCAD" ProductType="Application" Name="ACadSmartLeader" AppVersion="0.1.2" ProductCode="{424BA06D-95D6-4969-B94F-CEAC8A23C293}" UpgradeCode="{B135F3B5-693A-4FC9-9414-443ED38DC223}" Description="Умные выноски BobrovXDATA" Author="veb86">
   <CompanyDetails Name="veb86" Url="https://github.com/veb86/ACadSmartLeader" />
   <Components>
     <RuntimeRequirements OS="Win64" Platform="AutoCAD*" SeriesMin="R23.1" SeriesMax="R23.1" />

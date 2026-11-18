@@ -45,9 +45,17 @@ internal static class NodLabelStore
         if (errors.Count != 0) throw new FormatException(string.Join("\n", errors));
         var root = Dictionary(tr, db.NamedObjectsDictionaryId, Root);
         var labels = Dictionary(tr, root.ObjectId, "LABELS");
-        // Replace records atomically; remove dictionary keys before reusing an id with different case.
-        foreach (DBDictionaryEntry entry in labels.Cast<DBDictionaryEntry>().ToArray())
-        { tr.GetObject(labels.ObjectId, OpenMode.ForWrite); labels.Remove(entry.Key); tr.GetObject(entry.Value, OpenMode.ForWrite).Erase(); }
+        // Use AutoCAD's typed enumerator and snapshot the entries before changing the dictionary.
+        var previous = new List<DBDictionaryEntry>();
+        foreach (DBDictionaryEntry entry in labels)
+            previous.Add(entry);
+
+        if (previous.Count > 0) tr.GetObject(labels.ObjectId, OpenMode.ForWrite);
+        foreach (var entry in previous)
+        {
+            labels.Remove(entry.Key);
+            tr.GetObject(entry.Value, OpenMode.ForWrite).Erase();
+        }
         for (var i = 0; i < rules.Rules.Count; i++)
         {
             var obj = LabelRules.RecordJson(rules.Rules[i], i);

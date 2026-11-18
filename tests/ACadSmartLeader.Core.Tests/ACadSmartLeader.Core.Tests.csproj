@@ -5,6 +5,7 @@
     <PackageReference Include="xunit" Version="2.9.2" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" PrivateAssets="all" />
     <ProjectReference Include="../../src/ACadSmartLeader.Core/ACadSmartLeader.Core.csproj" />
+    <Compile Include="../../src/ACadSmartLeader/NodLabelStore.cs" Link="NodLabelStore.cs" />
     <None Include="../../external/acadPaletteSetXDATA/examples/schema.json" Link="schema.json" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../examples/label-rules.json" Link="label-rules.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
