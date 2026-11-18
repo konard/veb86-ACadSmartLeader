@@ -33,12 +33,20 @@ public sealed class Commands
         }
     }
     [CommandMethod("SL_CREATE", CommandFlags.Modal)]
-    public void Create() => Execute(document => {
+    public void Create() => CreateLeader(group: false);
+
+    [CommandMethod("SL_CREATE_GROUP", CommandFlags.Modal)]
+    public void CreateGroup() => CreateLeader(group: true);
+
+    private static void CreateLeader(bool group) => Execute(document => {
         var ed = document.Editor; var db = document.Database;
         using var tr = db.TransactionManager.StartTransaction();
         var rules = NodLabelStore.Read(tr, db, out var stored); var schema = Plugin.For(document).Schema.Get();
         var ruleId = "";
-        var options = new PromptPointOptions("\nТочка стрелки (привязка Ближайшая) [Rule]: "); options.Keywords.Add("Rule");
+        var options = new PromptPointOptions(group
+            ? "\nТочка стрелки (привязка Ближайшая): "
+            : "\nТочка стрелки (привязка Ближайшая) [Rule]: ");
+        if (!group) options.Keywords.Add("Rule");
         PromptPointResult point;
         while ((point = ed.GetPoint(options)).Status == PromptStatus.Keyword)
         {
@@ -66,12 +74,17 @@ public sealed class Commands
             arrow = resolver.Closest(target, arrow);
         }
         var values = resolver.Values(target);
-        var rule = rules.Select(ruleId, values.Template, target.GetType().Name);
-        if (rule == null) { ed.WriteMessage("\nНет правила для шаблона " + values.Template); return; }
+        var entityType = target.GetType().Name;
+        var rule = group ? rules.SelectGroup(values.Template, entityType) : rules.Select(ruleId, values.Template, entityType);
+        if (rule == null)
+        {
+            ed.WriteMessage((group ? "\nНет группового правила с суффиксом _GROUP для шаблона " : "\nНет правила для шаблона ") + values.Template);
+            return;
+        }
         var label = Plugin.For(document).Evaluator(schema, rules.Rules, new[] { resolver.Snapshot(target) }).Evaluate(resolver.Snapshot(target), rule);
         foreach (var error in label.Errors) ed.WriteMessage("\n" + error);
         if (schema.Schema == null) ed.WriteMessage("\nВ чертеже нет схемы VELEC: значения без справочников и точности.");
-        var data = new LeaderData { Target = target.Handle.ToString(), TargetId = values.DeviceId ?? "", Rule = ruleId };
+        var data = new LeaderData { Target = target.Handle.ToString(), TargetId = values.DeviceId ?? "", Rule = group ? rule.Id : ruleId };
         var landing = arrow + new Vector3d(Math.Max(1, style.TextHeight) * 8, Math.Max(1, style.TextHeight) * 4, 0);
         using var leader = LeaderFactory.Create(tr, db, db.CurrentSpaceId, arrow, landing, rule, label, data, message => ed.WriteMessage("\n" + message));
         var drag = ed.Drag(new LandingJig(leader));

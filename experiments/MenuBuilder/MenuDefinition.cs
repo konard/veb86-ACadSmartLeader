@@ -12,7 +12,12 @@ internal static class MenuDefinition
 
     public static void Write(string path)
     {
-        var commands = new[] { (Caption: "Создать", Id: "SL_CREATE"), (Caption: "Обновить", Id: "SL_UPDATE"), (Caption: "Правила", Id: "SL_RULES") };
+        var commands = new[] {
+            (Caption: "Создать", Id: "SL_CREATE"),
+            (Caption: "Создать групповую", Id: "SL_CREATE_GROUP"),
+            (Caption: "Обновить", Id: "SL_UPDATE"),
+            (Caption: "Правила", Id: "SL_RULES")
+        };
         var parts = new Dictionary<string, XElement>();
         parts.Add("Header.cui", new XElement("CustSection",
             new XElement("FileVersion", new XAttribute("MajorVersion", 0), new XAttribute("MinorVersion", 6), new XAttribute("IncrementalVersion", 1), new XAttribute("UserVersion", 0)),

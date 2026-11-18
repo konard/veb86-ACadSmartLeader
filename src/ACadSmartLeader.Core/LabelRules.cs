@@ -37,10 +37,20 @@ public sealed class LabelRules
     public LabelRule? Select(string? ruleId, string? template, string entityType)
     {
         var explicitRule = Rules.FirstOrDefault(r => string.Equals(r.Id, ruleId, StringComparison.OrdinalIgnoreCase));
-        if (explicitRule != null) return explicitRule;
-        bool Accepts(LabelRule r) => r.EntityTypes.Count == 0 || r.EntityTypes.Contains(entityType, StringComparer.OrdinalIgnoreCase);
-        return Rules.FirstOrDefault(r => Accepts(r) && r.Templates.Contains(template ?? "", StringComparer.OrdinalIgnoreCase)) ??
-            Rules.FirstOrDefault(r => Accepts(r) && r.Templates.Count == 0);
+        // A removed group rule leaves the leader's text intact until the rule is restored or replaced.
+        return explicitRule ?? (HasGroupSuffix(ruleId) ? null : SelectAutomatic(template, entityType, group: false));
+    }
+
+    public LabelRule? SelectGroup(string? template, string entityType) => SelectAutomatic(template, entityType, group: true);
+
+    public static bool HasGroupSuffix(string? ruleId) => ruleId?.EndsWith("_GROUP", StringComparison.OrdinalIgnoreCase) == true;
+
+    private LabelRule? SelectAutomatic(string? template, string entityType, bool group)
+    {
+        bool Accepts(LabelRule rule) => HasGroupSuffix(rule.Id) == group &&
+            (rule.EntityTypes.Count == 0 || rule.EntityTypes.Contains(entityType, StringComparer.OrdinalIgnoreCase));
+        return Rules.FirstOrDefault(rule => Accepts(rule) && rule.Templates.Contains(template ?? "", StringComparer.OrdinalIgnoreCase)) ??
+            Rules.FirstOrDefault(rule => Accepts(rule) && rule.Templates.Count == 0);
     }
 
     public IReadOnlyList<string> Validate()

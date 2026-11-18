@@ -146,7 +146,15 @@ public sealed class EditWindow : LeaderWindow
     public EditWindow(LeaderData source, LabelRules rules, SchemaSnapshot schema, EntityDataSnapshot? target, bool dark) : base("Редактировать выноску", dark)
     {
         Height = 560; Result = source.Copy();
-        var select = new ComboBox { ItemsSource = new[] { "Автоматически по шаблону" }.Concat(rules.Rules.Select(r => r.ToString())).ToArray(), SelectedIndex = Math.Max(0, rules.Rules.FindIndex(r => r.Id == source.Rule) + 1) };
+        var choices = rules.Rules.Select(r => (Id: r.Id, Caption: r.ToString())).ToList();
+        choices.Insert(0, ("", "Автоматически по шаблону"));
+        var selected = choices.FindIndex(choice => string.Equals(choice.Id, source.Rule, StringComparison.OrdinalIgnoreCase));
+        if (selected < 0 && LabelRules.HasGroupSuffix(source.Rule))
+        {
+            selected = choices.Count;
+            choices.Add((source.Rule, "Правило не найдено (" + source.Rule + ")"));
+        }
+        var select = new ComboBox { ItemsSource = choices.Select(choice => choice.Caption).ToArray(), SelectedIndex = Math.Max(0, selected) };
         Body.Children.Add(new TextBlock { Text = "Правило подписи", FontSize = 20, Margin = new Thickness(0, 0, 0, 10) }); Body.Children.Add(select);
         var customTop = new CheckBox { Content = "Свой формат верхней полки", IsChecked = source.Top != null, Foreground = Foreground, Margin = new Thickness(0, 10, 0, 0) }; Body.Children.Add(customTop);
         var top = Field("Верхняя полка", source.Top ?? "");
@@ -159,7 +167,7 @@ public sealed class EditWindow : LeaderWindow
             if (activeFormat == bottom) customBottom.IsChecked = true; else customTop.IsChecked = true;
         });
         var preview = new TextBlock { TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 12, 0, 0) }; Body.Children.Add(preview);
-        void Read() { Result.Rule = select.SelectedIndex <= 0 ? "" : rules.Rules[select.SelectedIndex - 1].Id; Result.Top = customTop.IsChecked == true ? top.Text : null; Result.Bottom = customBottom.IsChecked == true ? bottom.Text : null; }
+        void Read() { Result.Rule = choices[Math.Max(0, select.SelectedIndex)].Id; Result.Top = customTop.IsChecked == true ? top.Text : null; Result.Bottom = customBottom.IsChecked == true ? bottom.Text : null; }
         void Preview()
         {
             Read();
