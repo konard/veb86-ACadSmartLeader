@@ -25,9 +25,23 @@ internal static class Program
             new DataValue(1000, "Device_Number"), new DataValue(1000, "М1"), new DataValue(1000, "Power"), new DataValue(1040, 7.5)
         }, Array.Empty<DataRecord>());
         CheckParameterInsertion();
+        CheckGroupRuleSelection();
         Render(new RulesWindow(rules, schema, target, true), "rules-dark.png");
         Render(new EditWindow(new LeaderData { Rule = "MOTOR" }, rules, schema, target, false), "edit-light.png");
         Render(new SettingsWindow(RegenMode.RegenAll, null, true), "settings-dark.png");
+
+        void CheckGroupRuleSelection()
+        {
+            var existing = new EditWindow(new LeaderData { Rule = "cable_group" }, rules, schema, target, false);
+            var missing = new EditWindow(new LeaderData { Rule = "REMOVED_GROUP" }, rules, schema, target, false);
+            try
+            {
+                if (existing.Result.Rule != "CABLE_GROUP" || missing.Result.Rule != "REMOVED_GROUP")
+                    throw new InvalidOperationException("Opening the editor must preserve the group rule.");
+                Console.WriteLine("WPF_EDIT_GROUP_RULE_OK");
+            }
+            finally { existing.Close(); missing.Close(); }
+        }
 
         void CheckParameterInsertion()
         {

@@ -90,6 +90,64 @@ public sealed class CoreTests
     }
 
     [Fact]
+    public void AutomaticGroupSelectionHonorsSuffixFiltersAndPriority()
+    {
+        var rules = new LabelRules();
+        rules.Rules.AddRange(new[] {
+            new LabelRule { Id = "ANY_GROUP" },
+            new LabelRule { Id = "LINE_GROUP", Templates = new() { "MOTOR" }, EntityTypes = new() { "Line" } },
+            new LabelRule { Id = "DEVICE_Group", Templates = new() { "MOTOR" }, EntityTypes = new() { "BlockReference" } },
+            new LabelRule { Id = "OTHER_GROUP", Templates = new() { "MOTOR" } },
+            new LabelRule { Id = "DEVICE_GROUP_DETAIL", Templates = new() { "MOTOR" } },
+            new LabelRule { Id = "DEVICE", Templates = new() { "MOTOR" } }
+        });
+
+        Assert.Equal("DEVICE_Group", rules.SelectGroup("motor", "blockreference")?.Id);
+        Assert.Equal("LINE_GROUP", rules.SelectGroup("MOTOR", "Line")?.Id);
+        Assert.Equal("ANY_GROUP", rules.SelectGroup(null, "Circle")?.Id);
+        Assert.Equal("DEVICE_GROUP_DETAIL", rules.Select(null, "MOTOR", "BlockReference")?.Id);
+        Assert.Equal("DEVICE_Group", rules.Select("device_group", "OTHER", "Line")?.Id);
+
+        rules.Rules.RemoveAll(rule => rule.Id != "LINE_GROUP" && rule.Id != "DEVICE");
+        Assert.Null(rules.SelectGroup("MOTOR", "BlockReference"));
+        Assert.Null(rules.SelectGroup("OTHER", "Line"));
+        Assert.Null(rules.Select(null, "OTHER", "Line"));
+    }
+
+    [Fact]
+    public void GroupLeaderRetainsItsOwnTextAndRuleAcrossUpdates()
+    {
+        var group = new LabelRule { Id = "DEVICE_GROUP", Templates = new() { "MOTOR" }, Top = "@@[Group]", Bottom = "@@[Mount_Height] мм" };
+        var regular = new LabelRule { Id = "DEVICE", Templates = new() { "MOTOR" }, Top = "@@[Device_Number]", Bottom = "@@[Power] кВт" };
+        var rules = new LabelRules();
+        rules.Rules.AddRange(new[] { group, regular });
+        var target = Target("MOTOR", ("Device_Number", "М1"), ("Power", 7.5), ("Group", "ЩУ1.3"), ("Mount_Height", 1200));
+        var schema = new SchemaSnapshot(new SchemaNodReadResult(null, null, Array.Empty<SchemaIssue>()));
+        var engine = new LabelEvaluator(schema, rules.Rules, Ru, new[] { target });
+        var regularText = engine.Evaluate(target, rules.Select(null, "MOTOR", target.EntityType)!);
+        var chosenGroup = rules.SelectGroup("MOTOR", target.EntityType)!;
+        var groupText = engine.Evaluate(target, chosenGroup);
+        Assert.Equal("М1\\P7,5 кВт", regularText.MText);
+        Assert.Equal("ЩУ1.3\\P1200 мм", groupText.MText);
+        Assert.Empty(regularText.Errors);
+        Assert.Empty(groupText.Errors);
+
+        var stored = new LeaderData { Target = target.Handle, Rule = chosenGroup.Id, Text = LeaderData.TextStamp(groupText.MText) };
+        Assert.True(LeaderData.TryRead(stored.Write(), out var saved, out _));
+        rules.Rules.Insert(0, new LabelRule { Id = "PREFERRED_GROUP", Templates = new() { "MOTOR" }, Top = "Другой формат" });
+        Assert.Equal("PREFERRED_GROUP", rules.SelectGroup("MOTOR", target.EntityType)?.Id);
+        var updatedTarget = Target("MOTOR", ("Group", "ЩУ1.4"), ("Mount_Height", 1500));
+        var updatedRule = rules.Select(saved!.Rule, "MOTOR", updatedTarget.EntityType)!;
+        var updatedText = engine.Evaluate(updatedTarget, updatedRule);
+        var update = new LeaderUpdatePlan(saved, groupText.MText, saved.Target, null, updatedText);
+        Assert.Equal("DEVICE_GROUP", update.Data.Rule);
+        Assert.Equal("ЩУ1.4\\P1500 мм", update.Text);
+
+        rules.Rules.Remove(group);
+        Assert.Null(rules.Select(saved.Rule, "MOTOR", updatedTarget.EntityType));
+    }
+
+    [Fact]
     public void JsonExtensionsRoundTripAndInvalidRulesAreRejected()
     {
         const string json = "{\"format\":\"ACadSmartLeader.labels\",\"version\":1,\"future\":{\"x\":2},\"rules\":[{\"id\":\"R\",\"caption\":\"Р\",\"top\":\"@@[Later]\",\"unknown\":[1,true]}]}";
