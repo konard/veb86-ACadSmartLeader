@@ -12,7 +12,7 @@ TARGETS = {
     "AutoCAD2025": ("R25.0", None),
 }
 COMMANDS = {
-    "SL_CREATE", "SL_UPDATE", "SL_EDIT", "SL_RULES", "SL_RULES_IMPORT",
+    "SL_CREATE", "SL_CREATE_GROUP", "SL_UPDATE", "SL_EDIT", "SL_RULES", "SL_RULES_IMPORT",
     "SL_RULES_EXPORT", "SL_SETTINGS", "SL_SELECT_PROBLEMS",
 }
 
@@ -57,13 +57,11 @@ def check_menu(data):
         for relationship in roots["_rels/.rels"]:
             assert relationship.attrib["Target"].lstrip("/") in names
         macros = {m.attrib["UID"]: m.findtext("Macro/Command") for m in roots["MenuGroup.cui"].iter("MenuMacro")}
-        expected = {"SL_CREATE", "SL_UPDATE", "SL_RULES"}
-        assert len(macros) == 3
-        assert {command.split(")_")[-1].strip() for command in macros.values()} == expected
-        assert all(command.startswith("$M=$(if,$(getvar,cmdactive),^C^C,)_") and command.endswith(" ") for command in macros.values())
+        expected = ("SL_CREATE", "SL_CREATE_GROUP", "SL_UPDATE", "SL_RULES")
+        assert macros == {command + "_MACRO": f"$M=$(if,$(getvar,cmdactive),^C^C,)_{command} " for command in expected}
         buttons = list(roots["RibbonRoot.cui"].iter("RibbonCommandButton"))
-        assert len(buttons) == 3
-        assert {button.attrib["MenuMacroID"] for button in buttons} == set(macros)
+        assert [button.attrib["MenuMacroID"] for button in buttons] == [command + "_MACRO" for command in expected]
+        assert buttons[1].attrib["Text"] == "Создать групповую"
         panels = {p.attrib["UID"] for p in roots["RibbonRoot.cui"].iter("RibbonPanelSource")}
         assert all(p.attrib["PanelId"] in panels for p in roots["RibbonRoot.cui"].iter("RibbonPanelSourceReference"))
 
