@@ -11,7 +11,7 @@
       ((equal tag '(305 . "}")) (setq in-line nil))
       ((and in-line (= (car tag) 10)) (setq vertices (cons (cdr tag) vertices)))
       ((and in-leader (= (car tag) 10)) (setq landing (cdr tag)))
-      ((and in-leader (= (car tag) 11)) (setq dogleg (cdr tag)))))
+      ((and in-leader (not in-line) (= (car tag) 11)) (setq dogleg (cdr tag)))))
   (if (and (equal (cdr (assoc 0 data)) "MULTILEADER")
            (assoc -3 data)
            (= lines 1)

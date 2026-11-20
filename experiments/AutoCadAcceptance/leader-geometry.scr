@@ -4,6 +4,7 @@ SL_DEMO
 (sl-test-geometry (entlast) '(10.0 -25.0 0.0) 1 "SL_DEMO")
 _.ZOOM
 _Extents
+; The three SL_GEOMETRY results are available in the command history.
 SL_CREATE
 _non
 20,-25,0
